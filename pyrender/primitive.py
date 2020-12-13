@@ -4,11 +4,10 @@ https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-pri
 Author: Matthew Matl
 """
 import numpy as np
-
 from OpenGL.GL import *
 
+from .constants import FLOAT_SZ, GLTF, UINT_SZ, BufFlags
 from .material import Material, MetallicRoughnessMaterial
-from .constants import FLOAT_SZ, UINT_SZ, BufFlags, GLTF
 from .utils import format_color_array
 
 
@@ -54,20 +53,22 @@ class Primitive(object):
         Array of 4x4 transformation matrices for instancing this object.
     """
 
-    def __init__(self,
-                 positions,
-                 normals=None,
-                 tangents=None,
-                 texcoord_0=None,
-                 texcoord_1=None,
-                 color_0=None,
-                 joints_0=None,
-                 weights_0=None,
-                 indices=None,
-                 material=None,
-                 mode=None,
-                 targets=None,
-                 poses=None):
+    def __init__(
+        self,
+        positions,
+        normals=None,
+        tangents=None,
+        texcoord_0=None,
+        texcoord_1=None,
+        color_0=None,
+        joints_0=None,
+        weights_0=None,
+        indices=None,
+        material=None,
+        mode=None,
+        targets=None,
+        poses=None,
+    ):
 
         if mode is None:
             mode = GLTF.TRIANGLES
@@ -116,7 +117,7 @@ class Primitive(object):
             value = np.asanyarray(value, dtype=np.float32)
             value = np.ascontiguousarray(value)
             if value.shape != self.positions.shape:
-                raise ValueError('Incorrect normals shape')
+                raise ValueError("Incorrect normals shape")
         self._normals = value
 
     @property
@@ -131,7 +132,7 @@ class Primitive(object):
             value = np.asanyarray(value, dtype=np.float32)
             value = np.ascontiguousarray(value)
             if value.shape != (self.positions.shape[0], 4):
-                raise ValueError('Incorrect tangent shape')
+                raise ValueError("Incorrect tangent shape")
         self._tangents = value
 
     @property
@@ -145,11 +146,10 @@ class Primitive(object):
         if value is not None:
             value = np.asanyarray(value, dtype=np.float32)
             value = np.ascontiguousarray(value)
-            if (value.ndim != 2 or value.shape[0] != self.positions.shape[0] or
-                    value.shape[1] < 2):
-                raise ValueError('Incorrect texture coordinate shape')
+            if value.ndim != 2 or value.shape[0] != self.positions.shape[0] or value.shape[1] < 2:
+                raise ValueError("Incorrect texture coordinate shape")
             if value.shape[1] > 2:
-                value = value[:,:2]
+                value = value[:, :2]
         self._texcoord_0 = value
 
     @property
@@ -163,9 +163,8 @@ class Primitive(object):
         if value is not None:
             value = np.asanyarray(value, dtype=np.float32)
             value = np.ascontiguousarray(value)
-            if (value.ndim != 2 or value.shape[0] != self.positions.shape[0] or
-                    value.shape[1] != 2):
-                raise ValueError('Incorrect texture coordinate shape')
+            if value.ndim != 2 or value.shape[0] != self.positions.shape[0] or value.shape[1] != 2:
+                raise ValueError("Incorrect texture coordinate shape")
         self._texcoord_1 = value
 
     @property
@@ -177,9 +176,7 @@ class Primitive(object):
     @color_0.setter
     def color_0(self, value):
         if value is not None:
-            value = np.ascontiguousarray(
-                format_color_array(value, shape=(len(self.positions), 4))
-            )
+            value = np.ascontiguousarray(format_color_array(value, shape=(len(self.positions), 4)))
         self._is_transparent = None
         self._color_0 = value
 
@@ -229,7 +226,7 @@ class Primitive(object):
             value = MetallicRoughnessMaterial()
         else:
             if not isinstance(value, Material):
-                raise TypeError('Object material must be of type Material')
+                raise TypeError("Object material must be of type Material")
         self._material = value
 
     @property
@@ -242,7 +239,7 @@ class Primitive(object):
     def mode(self, value):
         value = int(value)
         if value < GLTF.POINTS or value > GLTF.TRIANGLE_FAN:
-            raise ValueError('Invalid mode')
+            raise ValueError("Invalid mode")
         self._mode = value
 
     @property
@@ -267,10 +264,9 @@ class Primitive(object):
             value = np.asanyarray(value, dtype=np.float32)
             value = np.ascontiguousarray(value)
             if value.ndim == 2:
-                value = value[np.newaxis,:,:]
+                value = value[np.newaxis, :, :]
             if value.shape[1] != 4 or value.shape[2] != 4:
-                raise ValueError('Pose matrices must be of shape (n,4,4), '
-                                 'got {}'.format(value.shape))
+                raise ValueError("Pose matrices must be of shape (n,4,4), " "got {}".format(value.shape))
         self._poses = value
         self._bounds = None
 
@@ -318,7 +314,7 @@ class Primitive(object):
 
     def _add_to_context(self):
         if self._vaid is not None:
-            raise ValueError('Mesh is already bound to a context')
+            raise ValueError("Mesh is already bound to a context")
 
         # Generate and bind VAO
         self._vaid = glGenVertexArrays(1)
@@ -364,20 +360,12 @@ class Primitive(object):
         # PASS
 
         # Copy data to buffer
-        vertex_data = np.ascontiguousarray(
-            vertex_data.flatten().astype(np.float32)
-        )
-        glBufferData(
-            GL_ARRAY_BUFFER, FLOAT_SZ * len(vertex_data),
-            vertex_data, GL_STATIC_DRAW
-        )
+        vertex_data = np.ascontiguousarray(vertex_data.flatten().astype(np.float32))
+        glBufferData(GL_ARRAY_BUFFER, FLOAT_SZ * len(vertex_data), vertex_data, GL_STATIC_DRAW)
         total_sz = sum(attr_sizes)
         offset = 0
         for i, sz in enumerate(attr_sizes):
-            glVertexAttribPointer(
-                i, sz, GL_FLOAT, GL_FALSE, FLOAT_SZ * total_sz,
-                ctypes.c_void_p(FLOAT_SZ * offset)
-            )
+            glVertexAttribPointer(i, sz, GL_FLOAT, GL_FALSE, FLOAT_SZ * total_sz, ctypes.c_void_p(FLOAT_SZ * offset))
             glEnableVertexAttribArray(i)
             offset += sz
 
@@ -386,29 +374,19 @@ class Primitive(object):
         #######################################################################
 
         if self.poses is not None:
-            pose_data = np.ascontiguousarray(
-                np.transpose(self.poses, [0,2,1]).flatten().astype(np.float32)
-            )
+            pose_data = np.ascontiguousarray(np.transpose(self.poses, [0, 2, 1]).flatten().astype(np.float32))
         else:
-            pose_data = np.ascontiguousarray(
-                np.eye(4).flatten().astype(np.float32)
-            )
+            pose_data = np.ascontiguousarray(np.eye(4).flatten().astype(np.float32))
 
         modelbuffer = glGenBuffers(1)
         self._buffers.append(modelbuffer)
         glBindBuffer(GL_ARRAY_BUFFER, modelbuffer)
-        glBufferData(
-            GL_ARRAY_BUFFER, FLOAT_SZ * len(pose_data),
-            pose_data, GL_STATIC_DRAW
-        )
+        glBufferData(GL_ARRAY_BUFFER, FLOAT_SZ * len(pose_data), pose_data, GL_STATIC_DRAW)
 
         for i in range(0, 4):
             idx = i + len(attr_sizes)
             glEnableVertexAttribArray(idx)
-            glVertexAttribPointer(
-                idx, 4, GL_FLOAT, GL_FALSE, FLOAT_SZ * 4 * 4,
-                ctypes.c_void_p(4 * FLOAT_SZ * i)
-            )
+            glVertexAttribPointer(idx, 4, GL_FLOAT, GL_FALSE, FLOAT_SZ * 4 * 4, ctypes.c_void_p(4 * FLOAT_SZ * i))
             glVertexAttribDivisor(idx, 1)
 
         #######################################################################
@@ -418,9 +396,12 @@ class Primitive(object):
             elementbuffer = glGenBuffers(1)
             self._buffers.append(elementbuffer)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer)
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, UINT_SZ * self.indices.size,
-                         self.indices.flatten().astype(np.uint32),
-                         GL_STATIC_DRAW)
+            glBufferData(
+                GL_ELEMENT_ARRAY_BUFFER,
+                UINT_SZ * self.indices.size,
+                self.indices.flatten().astype(np.uint32),
+                GL_STATIC_DRAW,
+            )
 
         glBindVertexArray(0)
 
@@ -436,8 +417,7 @@ class Primitive(object):
 
     def _bind(self):
         if self._vaid is None:
-            raise ValueError('Cannot bind a Mesh that has not been added '
-                             'to a context')
+            raise ValueError("Cannot bind a Mesh that has not been added " "to a context")
         glBindVertexArray(self._vaid)
 
     def _unbind(self):
@@ -447,13 +427,11 @@ class Primitive(object):
         """Compute the bounds of this object.
         """
         # Compute bounds of this object
-        bounds = np.array([np.min(self.positions, axis=0),
-                           np.max(self.positions, axis=0)])
+        bounds = np.array([np.min(self.positions, axis=0), np.max(self.positions, axis=0)])
 
         # If instanced, compute translations for approximate bounds
         if self.poses is not None:
-            bounds += np.array([np.min(self.poses[:,:3,3], axis=0),
-                                np.max(self.poses[:,:3,3], axis=0)])
+            bounds += np.array([np.min(self.poses[:, :3, 3], axis=0), np.max(self.poses[:, :3, 3], axis=0)])
         return bounds
 
     def _compute_transparency(self):
@@ -464,7 +442,7 @@ class Primitive(object):
         if self._is_transparent is None:
             self._is_transparent = False
             if self.color_0 is not None:
-                if np.any(self._color_0[:,3] != 1.0):
+                if np.any(self._color_0[:, 3] != 1.0):
                     self._is_transparent = True
         return self._is_transparent
 

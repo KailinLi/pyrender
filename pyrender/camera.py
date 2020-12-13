@@ -4,11 +4,12 @@ https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-cam
 Author: Matthew Matl
 """
 import abc
-import numpy as np
-import six
 import sys
 
-from .constants import DEFAULT_Z_NEAR, DEFAULT_Z_FAR
+import numpy as np
+import six
+
+from .constants import DEFAULT_Z_FAR, DEFAULT_Z_NEAR
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -32,10 +33,7 @@ class Camera(object):
         The user-defined name of this object.
     """
 
-    def __init__(self,
-                 znear=DEFAULT_Z_NEAR,
-                 zfar=DEFAULT_Z_FAR,
-                 name=None):
+    def __init__(self, znear=DEFAULT_Z_NEAR, zfar=DEFAULT_Z_FAR, name=None):
         self.name = name
         self.znear = znear
         self.zfar = zfar
@@ -62,7 +60,7 @@ class Camera(object):
     def znear(self, value):
         value = float(value)
         if value < 0:
-            raise ValueError('z-near must be >= 0.0')
+            raise ValueError("z-near must be >= 0.0")
         self._znear = value
 
     @property
@@ -75,7 +73,7 @@ class Camera(object):
     def zfar(self, value):
         value = float(value)
         if value <= 0 or value <= self.znear:
-            raise ValueError('zfar must be >0 and >znear')
+            raise ValueError("zfar must be >0 and >znear")
         self._zfar = value
 
     @abc.abstractmethod
@@ -114,16 +112,9 @@ class PerspectiveCamera(Camera):
         The user-defined name of this object.
     """
 
-    def __init__(self,
-                 yfov,
-                 znear=DEFAULT_Z_NEAR,
-                 zfar=None,
-                 aspectRatio=None,
-                 name=None):
+    def __init__(self, yfov, znear=DEFAULT_Z_NEAR, zfar=None, aspectRatio=None, name=None):
         super(PerspectiveCamera, self).__init__(
-            znear=znear,
-            zfar=zfar,
-            name=name,
+            znear=znear, zfar=zfar, name=name,
         )
 
         self.yfov = yfov
@@ -139,7 +130,7 @@ class PerspectiveCamera(Camera):
     def yfov(self, value):
         value = float(value)
         if value <= 0.0:
-            raise ValueError('Field of view must be positive')
+            raise ValueError("Field of view must be positive")
         self._yfov = value
 
     @property
@@ -153,7 +144,7 @@ class PerspectiveCamera(Camera):
         if value is not None:
             value = float(value)
             if value <= 0 or value <= self.znear:
-                raise ValueError('zfar must be >0 and >znear')
+                raise ValueError("zfar must be >0 and >znear")
         self._zfar = value
 
     @property
@@ -167,7 +158,7 @@ class PerspectiveCamera(Camera):
         if value is not None:
             value = float(value)
             if value <= 0.0:
-                raise ValueError('Aspect ratio must be positive')
+                raise ValueError("Aspect ratio must be positive")
         self._aspectRatio = value
 
     def get_projection_matrix(self, width=None, height=None):
@@ -183,7 +174,7 @@ class PerspectiveCamera(Camera):
         aspect_ratio = self.aspectRatio
         if aspect_ratio is None:
             if width is None or height is None:
-                raise ValueError('Aspect ratio of camera must be defined')
+                raise ValueError("Aspect ratio of camera must be defined")
             aspect_ratio = float(width) / float(height)
 
         a = aspect_ratio
@@ -191,7 +182,7 @@ class PerspectiveCamera(Camera):
         n = self.znear
         f = self.zfar
 
-        P = np.zeros((4,4))
+        P = np.zeros((4, 4))
         P[0][0] = 1.0 / (a * t)
         P[1][1] = 1.0 / t
         P[3][2] = -1.0
@@ -226,16 +217,9 @@ class OrthographicCamera(Camera):
         The user-defined name of this object.
     """
 
-    def __init__(self,
-                 xmag,
-                 ymag,
-                 znear=DEFAULT_Z_NEAR,
-                 zfar=DEFAULT_Z_FAR,
-                 name=None):
+    def __init__(self, xmag, ymag, znear=DEFAULT_Z_NEAR, zfar=DEFAULT_Z_FAR, name=None):
         super(OrthographicCamera, self).__init__(
-            znear=znear,
-            zfar=zfar,
-            name=name,
+            znear=znear, zfar=zfar, name=name,
         )
 
         self.xmag = xmag
@@ -251,7 +235,7 @@ class OrthographicCamera(Camera):
     def xmag(self, value):
         value = float(value)
         if value <= 0.0:
-            raise ValueError('X magnification must be positive')
+            raise ValueError("X magnification must be positive")
         self._xmag = value
 
     @property
@@ -264,7 +248,7 @@ class OrthographicCamera(Camera):
     def ymag(self, value):
         value = float(value)
         if value <= 0.0:
-            raise ValueError('Y magnification must be positive')
+            raise ValueError("Y magnification must be positive")
         self._ymag = value
 
     @property
@@ -277,7 +261,7 @@ class OrthographicCamera(Camera):
     def znear(self, value):
         value = float(value)
         if value <= 0:
-            raise ValueError('z-near must be > 0.0')
+            raise ValueError("z-near must be > 0.0")
         self._znear = value
 
     def get_projection_matrix(self, width=None, height=None):
@@ -301,7 +285,7 @@ class OrthographicCamera(Camera):
 
         n = self.znear
         f = self.zfar
-        P = np.zeros((4,4))
+        P = np.zeros((4, 4))
         P[0][0] = 1.0 / xmag
         P[1][1] = 1.0 / ymag
         P[2][2] = 2.0 / (n - f)
@@ -334,18 +318,9 @@ class IntrinsicsCamera(Camera):
         The user-defined name of this object.
     """
 
-    def __init__(self,
-                 fx,
-                 fy,
-                 cx,
-                 cy,
-                 znear=DEFAULT_Z_NEAR,
-                 zfar=DEFAULT_Z_FAR,
-                 name=None):
+    def __init__(self, fx, fy, cx, cy, znear=DEFAULT_Z_NEAR, zfar=DEFAULT_Z_FAR, name=None):
         super(IntrinsicsCamera, self).__init__(
-            znear=znear,
-            zfar=zfar,
-            name=name,
+            znear=znear, zfar=zfar, name=name,
         )
 
         self.fx = fx
@@ -408,13 +383,13 @@ class IntrinsicsCamera(Camera):
 
         cx, cy = self.cx, self.cy
         fx, fy = self.fx, self.fy
-        if sys.platform == 'darwin':
+        if sys.platform == "darwin":
             cx = self.cx * 2.0
             cy = self.cy * 2.0
             fx = self.fx * 2.0
             fy = self.fy * 2.0
 
-        P = np.zeros((4,4))
+        P = np.zeros((4, 4))
         P[0][0] = 2.0 * fx / width
         P[1][1] = 2.0 * fy / height
         P[0][2] = 1.0 - 2.0 * cx / (width - 1.0)
@@ -433,5 +408,5 @@ class IntrinsicsCamera(Camera):
         return P
 
 
-__all__ = ['Camera', 'PerspectiveCamera', 'OrthographicCamera',
-           'IntrinsicsCamera']
+__all__ = ["Camera", "PerspectiveCamera", "OrthographicCamera", "IntrinsicsCamera"]
+

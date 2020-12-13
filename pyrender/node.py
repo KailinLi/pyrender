@@ -4,12 +4,11 @@ https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-nod
 Author: Matthew Matl
 """
 import numpy as np
-
 import trimesh.transformations as transformations
 
 from .camera import Camera
-from .mesh import Mesh
 from .light import Light
+from .mesh import Mesh
 
 
 class Node(object):
@@ -44,18 +43,20 @@ class Node(object):
         The light in this node.
     """
 
-    def __init__(self,
-                 name=None,
-                 camera=None,
-                 children=None,
-                 skin=None,
-                 matrix=None,
-                 mesh=None,
-                 rotation=None,
-                 scale=None,
-                 translation=None,
-                 weights=None,
-                 light=None):
+    def __init__(
+        self,
+        name=None,
+        camera=None,
+        children=None,
+        skin=None,
+        matrix=None,
+        mesh=None,
+        rotation=None,
+        scale=None,
+        translation=None,
+        weights=None,
+        light=None,
+    ):
         # Set defaults
         if children is None:
             children = []
@@ -106,7 +107,7 @@ class Node(object):
     @camera.setter
     def camera(self, value):
         if value is not None and not isinstance(value, Camera):
-            raise TypeError('Value must be a camera')
+            raise TypeError("Value must be a camera")
         self._camera = value
 
     @property
@@ -138,7 +139,7 @@ class Node(object):
     @mesh.setter
     def mesh(self, value):
         if value is not None and not isinstance(value, Mesh):
-            raise TypeError('Value must be a mesh')
+            raise TypeError("Value must be a mesh")
         self._mesh = value
 
     @property
@@ -150,7 +151,7 @@ class Node(object):
     @light.setter
     def light(self, value):
         if value is not None and not isinstance(value, Light):
-            raise TypeError('Value must be a light')
+            raise TypeError("Value must be a light")
         self._light = value
 
     @property
@@ -163,9 +164,9 @@ class Node(object):
     def rotation(self, value):
         value = np.asanyarray(value)
         if value.shape != (4,):
-            raise ValueError('Quaternion must be a (4,) vector')
+            raise ValueError("Quaternion must be a (4,) vector")
         if np.abs(np.linalg.norm(value) - 1.0) > 1e-3:
-            raise ValueError('Quaternion must have norm == 1.0')
+            raise ValueError("Quaternion must have norm == 1.0")
         self._rotation = value
         self._matrix = None
 
@@ -179,7 +180,7 @@ class Node(object):
     def translation(self, value):
         value = np.asanyarray(value)
         if value.shape != (3,):
-            raise ValueError('Translation must be a (3,) vector')
+            raise ValueError("Translation must be a (3,) vector")
         self._translation = value
         self._matrix = None
 
@@ -193,7 +194,7 @@ class Node(object):
     def scale(self, value):
         value = np.asanyarray(value)
         if value.shape != (3,):
-            raise ValueError('Scale must be a (3,) vector')
+            raise ValueError("Scale must be a (3,) vector")
         self._scale = value
         self._matrix = None
 
@@ -206,18 +207,16 @@ class Node(object):
         matrix, but not an individual element.
         """
         if self._matrix is None:
-            self._matrix = self._m_from_tqs(
-                self.translation, self.rotation, self.scale
-            )
+            self._matrix = self._m_from_tqs(self.translation, self.rotation, self.scale)
         return self._matrix.copy()
 
     @matrix.setter
     def matrix(self, value):
         value = np.asanyarray(value)
-        if value.shape != (4,4):
-            raise ValueError('Matrix must be a 4x4 numpy ndarray')
-        if not np.allclose(value[3,:], np.array([0.0, 0.0, 0.0, 1.0])):
-            raise ValueError('Bottom row of matrix must be [0,0,0,1]')
+        if value.shape != (4, 4):
+            raise ValueError("Matrix must be a 4x4 numpy ndarray")
+        if not np.allclose(value[3, :], np.array([0.0, 0.0, 0.0, 1.0])):
+            raise ValueError("Bottom row of matrix must be [0,0,0,1]")
         self._matrix = value
         self.rotation = Node._q_from_m(value)
         self.scale = Node._s_from_m(value)
@@ -225,39 +224,39 @@ class Node(object):
 
     @staticmethod
     def _t_from_m(m):
-        return m[:3,3]
+        return m[:3, 3]
 
     @staticmethod
     def _r_from_m(m):
-        U = m[:3,:3]
+        U = m[:3, :3]
         norms = np.linalg.norm(U.T, axis=1)
         return U / norms
 
     @staticmethod
     def _q_from_m(m):
         M = np.eye(4)
-        M[:3,:3] = Node._r_from_m(m)
+        M[:3, :3] = Node._r_from_m(m)
         q_wxyz = transformations.quaternion_from_matrix(M)
         return np.roll(q_wxyz, -1)
 
     @staticmethod
     def _s_from_m(m):
-        return np.linalg.norm(m[:3,:3].T, axis=1)
+        return np.linalg.norm(m[:3, :3].T, axis=1)
 
     @staticmethod
     def _r_from_q(q):
         q_wxyz = np.roll(q, 1)
-        return transformations.quaternion_matrix(q_wxyz)[:3,:3]
+        return transformations.quaternion_matrix(q_wxyz)[:3, :3]
 
     @staticmethod
     def _m_from_tqs(t, q, s):
         S = np.eye(4)
-        S[:3,:3] = np.diag(s)
+        S[:3, :3] = np.diag(s)
 
         R = np.eye(4)
-        R[:3,:3] = Node._r_from_q(q)
+        R[:3, :3] = Node._r_from_q(q)
 
         T = np.eye(4)
-        T[:3,3] = t
+        T[:3, 3] = t
 
         return T.dot(R.dot(S))

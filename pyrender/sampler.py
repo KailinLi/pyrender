@@ -37,12 +37,7 @@ class Sampler(object):
             - :attr:`.GLTF.REPEAT`
     """
 
-    def __init__(self,
-                 name=None,
-                 magFilter=None,
-                 minFilter=None,
-                 wrapS=GLTF.REPEAT,
-                 wrapT=GLTF.REPEAT):
+    def __init__(self, name=None, magFilter=None, minFilter=None, wrapS=GLTF.REPEAT, wrapT=GLTF.REPEAT):
         self.name = name
         self.magFilter = magFilter
         self.minFilter = minFilter

@@ -4,7 +4,7 @@ from .base import Platform
 import OpenGL
 
 
-__all__ = ['PygletPlatform']
+__all__ = ["PygletPlatform"]
 
 
 class PygletPlatform(Platform):
@@ -18,7 +18,8 @@ class PygletPlatform(Platform):
 
     def init_context(self):
         import pyglet
-        pyglet.options['shadow_window'] = False
+
+        pyglet.options["shadow_window"] = False
 
         try:
             pyglet.lib.x11.xlib.XInitThreads()
@@ -27,21 +28,20 @@ class PygletPlatform(Platform):
 
         self._window = None
         conf = pyglet.gl.Config(
-            sample_buffers=1, samples=4,
+            sample_buffers=1,
+            samples=4,
             depth_size=24,
             double_buffer=True,
             major_version=OPEN_GL_MAJOR,
-            minor_version=OPEN_GL_MINOR
+            minor_version=OPEN_GL_MINOR,
         )
         try:
-            self._window = pyglet.window.Window(config=conf, visible=False,
-                                                resizable=False,
-                                                width=1, height=1)
+            self._window = pyglet.window.Window(config=conf, visible=False, resizable=False, width=1, height=1)
         except Exception as e:
             raise ValueError(
-                'Failed to initialize Pyglet window with an OpenGL >= 3+ '
-                'context. If you\'re logged in via SSH, ensure that you\'re '
-                'running your script with vglrun (i.e. VirtualGL). The '
+                "Failed to initialize Pyglet window with an OpenGL >= 3+ "
+                "context. If you're logged in via SSH, ensure that you're "
+                "running your script with vglrun (i.e. VirtualGL). The "
                 'internal error message was "{}"'.format(e)
             )
 
@@ -51,6 +51,7 @@ class PygletPlatform(Platform):
 
     def make_uncurrent(self):
         import pyglet
+
         pyglet.gl.xlib.glx.glXMakeContextCurrent(self._window.context.x_display, 0, 0, None)
 
     def delete_context(self):

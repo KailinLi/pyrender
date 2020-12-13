@@ -1,20 +1,19 @@
 """Trackball class for 3D manipulation of viewpoints.
 """
 import numpy as np
-
 import trimesh.transformations as transformations
 
 
 class Trackball(object):
     """A trackball class for creating camera transforms from mouse movements.
     """
+
     STATE_ROTATE = 0
     STATE_PAN = 1
     STATE_ROLL = 2
     STATE_ZOOM = 3
 
-    def __init__(self, pose, size, scale,
-                 target=np.array([0.0, 0.0, 0.0])):
+    def __init__(self, pose, size, scale, target=np.array([0.0, 0.0, 0.0])):
         """Initialize a trackball with an initial camera-to-world pose
         and the given parameters.
 
@@ -101,22 +100,18 @@ class Trackball(object):
         mindim = 0.3 * np.min(self._size)
 
         target = self._target
-        x_axis = self._pose[:3,0].flatten()
-        y_axis = self._pose[:3,1].flatten()
-        z_axis = self._pose[:3,2].flatten()
-        eye = self._pose[:3,3].flatten()
+        x_axis = self._pose[:3, 0].flatten()
+        y_axis = self._pose[:3, 1].flatten()
+        z_axis = self._pose[:3, 2].flatten()
+        eye = self._pose[:3, 3].flatten()
 
         # Interpret drag as a rotation
         if self._state == Trackball.STATE_ROTATE:
             x_angle = -dx / mindim
-            x_rot_mat = transformations.rotation_matrix(
-                x_angle, y_axis, target
-            )
+            x_rot_mat = transformations.rotation_matrix(x_angle, y_axis, target)
 
             y_angle = dy / mindim
-            y_rot_mat = transformations.rotation_matrix(
-                y_angle, x_axis, target
-            )
+            y_rot_mat = transformations.rotation_matrix(y_angle, x_axis, target)
 
             self._n_pose = y_rot_mat.dot(x_rot_mat.dot(self._pose))
 
@@ -128,8 +123,7 @@ class Trackball(object):
             v_init = v_init / np.linalg.norm(v_init)
             v_curr = v_curr / np.linalg.norm(v_curr)
 
-            theta = (-np.arctan2(v_curr[1], v_curr[0]) +
-                     np.arctan2(v_init[1], v_init[0]))
+            theta = -np.arctan2(v_curr[1], v_curr[0]) + np.arctan2(v_init[1], v_init[0])
 
             rot_mat = transformations.rotation_matrix(theta, z_axis, target)
 
@@ -143,7 +137,7 @@ class Trackball(object):
             translation = dx * x_axis + dy * y_axis
             self._n_target = self._target + translation
             t_tf = np.eye(4)
-            t_tf[:3,3] = translation
+            t_tf[:3, 3] = translation
             self._n_pose = t_tf.dot(self._pose)
 
         # Interpret drag as a zoom motion
@@ -156,7 +150,7 @@ class Trackball(object):
                 ratio = 1.0 - np.exp(dy / (0.5 * (self._size[1])))
             translation = -np.sign(dy) * ratio * radius * z_axis
             t_tf = np.eye(4)
-            t_tf[:3,3] = translation
+            t_tf[:3, 3] = translation
             self._n_pose = t_tf.dot(self._pose)
 
     def scroll(self, clicks):
@@ -173,24 +167,24 @@ class Trackball(object):
 
         mult = 1.0
         if clicks > 0:
-            mult = ratio**clicks
+            mult = ratio ** clicks
         elif clicks < 0:
-            mult = (1.0 / ratio)**abs(clicks)
+            mult = (1.0 / ratio) ** abs(clicks)
 
-        z_axis = self._n_pose[:3,2].flatten()
-        eye = self._n_pose[:3,3].flatten()
+        z_axis = self._n_pose[:3, 2].flatten()
+        eye = self._n_pose[:3, 3].flatten()
         radius = np.linalg.norm(eye - target)
         translation = (mult * radius - radius) * z_axis
         t_tf = np.eye(4)
-        t_tf[:3,3] = translation
+        t_tf[:3, 3] = translation
         self._n_pose = t_tf.dot(self._n_pose)
 
-        z_axis = self._pose[:3,2].flatten()
-        eye = self._pose[:3,3].flatten()
+        z_axis = self._pose[:3, 2].flatten()
+        eye = self._pose[:3, 3].flatten()
         radius = np.linalg.norm(eye - target)
         translation = (mult * radius - radius) * z_axis
         t_tf = np.eye(4)
-        t_tf[:3,3] = translation
+        t_tf[:3, 3] = translation
         self._pose = t_tf.dot(self._pose)
 
     def rotate(self, azimuth, axis=None):
@@ -203,13 +197,13 @@ class Trackball(object):
         """
         target = self._target
 
-        y_axis = self._n_pose[:3,1].flatten()
+        y_axis = self._n_pose[:3, 1].flatten()
         if axis is not None:
             y_axis = axis
         x_rot_mat = transformations.rotation_matrix(azimuth, y_axis, target)
         self._n_pose = x_rot_mat.dot(self._n_pose)
 
-        y_axis = self._pose[:3,1].flatten()
+        y_axis = self._pose[:3, 1].flatten()
         if axis is not None:
             y_axis = axis
         x_rot_mat = transformations.rotation_matrix(azimuth, y_axis, target)
